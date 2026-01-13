@@ -7,7 +7,9 @@
 4. One message, one line.
 5. The only allowed operations are read and append.
 
-## cf - Chatfile CLI Tool
+---
+
+#### cf - Chatfile CLI Tool
 
 A bash tool for managing chatrooms via Chatfiles.
 
