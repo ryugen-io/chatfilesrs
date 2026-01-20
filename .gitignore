@@ -1,1 +1,21 @@
-__pycache__
+# Rust
+/target/
+Cargo.lock
+
+# Python (legacy)
+__pycache__/
+
+# Chatfiles
+*.Chatfile
+.cf_session
+
+# Dev
+.tmp/
+*.log
+dev/scripts/.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~

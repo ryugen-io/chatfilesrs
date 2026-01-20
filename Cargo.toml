@@ -1,0 +1,42 @@
+[package]
+name = "chatfiles"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Minimal text-file-based protocol for multi-agent coordination"
+license = "MIT"
+repository = "https://github.com/anthropics/chatfiles"
+keywords = ["ai", "agents", "chat", "coordination"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "cf"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+rand = "0.9"
+chrono = "0.4"
+thiserror = "2.0"
+directories = "6"
+
+# Optional web dependencies
+axum = { version = "0.8", optional = true }
+tokio = { version = "1.49", features = ["full"], optional = true }
+tower-http = { version = "0.6", features = ["cors"], optional = true }
+dav-server = { version = "0.10", optional = true }
+
+# Optional logging
+hl_core = { git = "ssh://git@github.com/ryugen-io/hyprlog.git", branch = "main", optional = true }
+
+[features]
+default = []
+web = ["dep:axum", "dep:tokio", "dep:tower-http", "dep:dav-server"]
+hyprlog = ["dep:hl_core"]
+
+[profile.release]
+lto = true
+strip = true
+opt-level = "z"
+panic = "abort"
+codegen-units = 1
