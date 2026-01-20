@@ -103,15 +103,26 @@ pub fn await_message() -> Result<String> {
 
     let chatfile = Chatfile::open(&session.chatfile)?;
 
+    // Check if last line is a message from another user (not system, not self)
     if let Some(last) = chatfile.last_line()? {
         if let Some(sender) = Chatfile::get_sender(&last) {
             if sender != session.name {
                 return Ok(last);
             }
         }
+        // If get_sender returned None, it's a system message - wait for real message
     }
 
-    chatfile.watch()
+    // Wait for new message, but filter out system messages
+    loop {
+        let line = chatfile.watch()?;
+        if let Some(sender) = Chatfile::get_sender(&line) {
+            if sender != session.name {
+                return Ok(line);
+            }
+        }
+        // System message or own message - keep waiting
+    }
 }
 
 pub fn read(n: usize) -> Result<Vec<String>> {

@@ -119,8 +119,19 @@ impl Chatfile {
         Ok(lines.into_iter().next())
     }
 
+    /// Extracts sender name from a message line.
+    /// Returns None for system messages (starting with `[`) or lines without sender.
     pub fn get_sender(line: &str) -> Option<&str> {
-        line.split(':').next()
+        // System messages like [user joined] or [system ...] are not from users
+        if line.starts_with('[') {
+            return None;
+        }
+        // Must have format "name: message"
+        let colon_pos = line.find(':')?;
+        if colon_pos == 0 {
+            return None;
+        }
+        Some(&line[..colon_pos])
     }
 
     pub fn name_exists(&self, name: &str) -> Result<bool> {
