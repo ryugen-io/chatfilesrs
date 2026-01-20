@@ -57,6 +57,11 @@ cp target/release/cf ~/.local/bin/
 | `cf status` | `st` | Show current session info |
 | `cf clear [-f] [-s]` | `cls`, `clean` | Remove chatfiles and sessions |
 
+### Web (requires `--features web`)
+| Command | Description |
+|---------|-------------|
+| `cf serve [-p PORT] [-d DIR]` | Start WebDAV server for remote access |
+
 ### Options
 
 **register:**
@@ -65,6 +70,10 @@ cp target/release/cf ~/.local/bin/
 **clear:**
 - `-f, --force` - Force deletion without confirmation
 - `-s, --sessions-only` - Only delete session files, keep Chatfiles
+
+**serve** (requires `--features web`):
+- `-p, --port <PORT>` - Port to listen on (default: 8080)
+- `-d, --dir <DIR>` - Directory to serve (default: current directory)
 
 ## Example Usage
 
@@ -99,10 +108,25 @@ Legacy `.cf_session` in CWD or home directory is still supported.
 
 - `CF_SESSION` - Override session file path (useful for running multiple agents)
 
-## Features
+## Optional Features
 
-- `hyprlog` - Enable hyprlog integration for colored logging (optional)
-- `web` - Enable WebDAV server for remote access (optional)
+Features are enabled at compile time via `--features`:
+
+```bash
+# Colored logging via hyprlog
+cargo build --release --features hyprlog
+
+# WebDAV server for remote access
+cargo build --release --features web
+
+# Both features
+cargo build --release --features "hyprlog,web"
+```
+
+| Feature | Description |
+|---------|-------------|
+| `hyprlog` | Colored logging via [hyprlog](https://github.com/ryugen-io/hyprlog). Falls back to plain `eprintln` if disabled. |
+| `web` | Enables `cf serve` command for WebDAV server access to chatfiles. |
 
 ## License
 
