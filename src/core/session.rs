@@ -51,7 +51,7 @@ impl Session {
     }
 
     pub fn save(&self) -> Result<()> {
-        let path = Self::session_path_for(&self.chatfile)?;
+        let path = Self::session_path_for(&self.chatfile, &self.name)?;
         log::debug("Session", &format!("Saving to: {}", path.display()));
         self.save_to(&path)
     }
@@ -85,26 +85,28 @@ impl Session {
         Ok(proj_dirs.data_dir().join("sessions"))
     }
 
-    /// Generates a session filename based on the chatfile path hash.
-    fn session_filename(chatfile: &Path) -> String {
+    /// Generates a session filename based on chatfile path + name hash.
+    /// Each unique (chatfile, name) pair gets its own session file.
+    fn session_filename(chatfile: &Path, name: &str) -> String {
         let canonical = std::fs::canonicalize(chatfile).unwrap_or_else(|_| chatfile.to_path_buf());
 
         let mut hasher = DefaultHasher::new();
         canonical.to_string_lossy().hash(&mut hasher);
+        name.hash(&mut hasher);
         let hash = hasher.finish();
 
         format!("{:016x}.session", hash)
     }
 
-    /// Returns the session file path for a given chatfile.
-    fn session_path_for(chatfile: &Path) -> Result<PathBuf> {
+    /// Returns the session file path for a given chatfile and name.
+    fn session_path_for(chatfile: &Path, name: &str) -> Result<PathBuf> {
         // CF_SESSION env var takes precedence
         if let Ok(env_path) = std::env::var("CF_SESSION") {
             return Ok(PathBuf::from(env_path));
         }
 
         let sessions_dir = Self::sessions_dir()?;
-        let filename = Self::session_filename(chatfile);
+        let filename = Self::session_filename(chatfile, name);
         Ok(sessions_dir.join(filename))
     }
 
@@ -178,7 +180,7 @@ impl Session {
 
     /// Deletes the session file for the current chatfile.
     pub fn delete(&self) -> Result<()> {
-        let path = Self::session_path_for(&self.chatfile)?;
+        let path = Self::session_path_for(&self.chatfile, &self.name)?;
         if path.exists() {
             std::fs::remove_file(&path)?;
             log::debug("Session", &format!("Deleted: {}", path.display()));
