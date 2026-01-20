@@ -19,6 +19,7 @@ rand = "0.9"
 chrono = "0.4"
 thiserror = "2.0"
 directories = "6"
+notify = "8"
 
 # Optional web dependencies
 axum = { version = "0.8", optional = true }

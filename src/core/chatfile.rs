@@ -1,10 +1,11 @@
 use std::fs::{File, OpenOptions};
-use std::io::{BufRead, BufReader, Seek, SeekFrom, Write};
+use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
-use std::thread;
+use std::sync::mpsc;
 use std::time::Duration;
 
 use chrono::Local;
+use notify::{Event, RecursiveMode, Watcher};
 
 use super::error::{Error, Result};
 use crate::log;
@@ -136,23 +137,54 @@ impl Chatfile {
     }
 
     pub fn watch(&self) -> Result<String> {
-        let mut file = File::open(&self.path)?;
-        file.seek(SeekFrom::End(0))?;
+        // Get initial line count
+        let initial_lines = self.count_lines()?;
 
-        let mut reader = BufReader::new(file);
-        let mut line = String::new();
+        // Set up file watcher with channel
+        let (tx, rx) = mpsc::channel();
+        let mut watcher = notify::recommended_watcher(move |res: std::result::Result<Event, _>| {
+            if let Ok(event) = res {
+                if event.kind.is_modify() {
+                    let _ = tx.send(());
+                }
+            }
+        })
+        .map_err(|e| Error::Io(std::io::Error::other(format!("watcher error: {e}"))))?;
 
+        watcher
+            .watch(&self.path, RecursiveMode::NonRecursive)
+            .map_err(|e| Error::Io(std::io::Error::other(format!("watch error: {e}"))))?;
+
+        log::debug("Chatfile", "Waiting for new message (inotify)...");
+
+        // Wait for file modification events
         loop {
-            match reader.read_line(&mut line) {
-                Ok(0) => {
-                    thread::sleep(Duration::from_millis(100));
+            // Block until we get a notification (with timeout to prevent infinite hang)
+            match rx.recv_timeout(Duration::from_secs(60)) {
+                Ok(()) => {
+                    // File was modified, check for new lines
+                    let current_lines = self.count_lines()?;
+                    if current_lines > initial_lines {
+                        // Read the last line
+                        if let Some(line) = self.last_line()? {
+                            return Ok(line);
+                        }
+                    }
+                }
+                Err(mpsc::RecvTimeoutError::Timeout) => {
+                    // Timeout - just continue waiting
                     continue;
                 }
-                Ok(_) => {
-                    return Ok(line.trim_end().to_string());
+                Err(mpsc::RecvTimeoutError::Disconnected) => {
+                    return Err(Error::Io(std::io::Error::other("watcher disconnected")));
                 }
-                Err(e) => return Err(e.into()),
             }
         }
+    }
+
+    fn count_lines(&self) -> Result<usize> {
+        let file = File::open(&self.path)?;
+        let reader = BufReader::new(file);
+        Ok(reader.lines().count())
     }
 }
