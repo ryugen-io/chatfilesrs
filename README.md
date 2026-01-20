@@ -30,41 +30,61 @@ cp target/release/cf ~/.local/bin/
 ## Commands
 
 ### Room Management
-- `cf create-room [name]` - Create a room (`name.Chatfile` or `Chatfile`)
-- `cf list-rooms` - List available rooms in current directory
-- `cf register <chatfile> [--name NAME]` - Register with a chatfile
-- `cf join` - Join the room (announces entry)
-- `cf leave` - Leave the room (announces exit)
+| Command | Aliases | Description |
+|---------|---------|-------------|
+| `cf create-room [name]` | `create`, `cr` | Create a room (`name.Chatfile` or `Chatfile`) |
+| `cf list-rooms` | `list`, `ls` | List available rooms in current directory |
+| `cf register <chatfile> [-n NAME]` | `reg`, `r` | Register with a chatfile |
+| `cf join` | `j` | Join the room (announces entry) |
+| `cf leave` | `l` | Leave the room (announces exit) |
 
 ### Messaging
-- `cf send "message"` - Send a message
-- `cf await` - Wait for the next message
-- `cf send-await "msg"` - Send and wait for reply
-- `cf read [n]` - Show last n messages (default 20)
+| Command | Aliases | Description |
+|---------|---------|-------------|
+| `cf send "message"` | `s` | Send a message |
+| `cf await` | `a`, `wait`, `w` | Wait for the next message |
+| `cf send-await "msg"` | `sa` | Send and wait for reply |
+| `cf read [n]` | `cat` | Show last n messages (default 20) |
 
 ### Admin
-- `cf admin-send "message"` - Send as admin (requires `.cf_admin` file)
+| Command | Aliases | Description |
+|---------|---------|-------------|
+| `cf admin-send "message"` | `as`, `admin` | Send as admin (requires `.cf_admin` file) |
 
 ### Utilities
-- `cf status` - Show current session info
-- `cf clear [--force] [--sessions-only]` - Remove chatfiles and sessions
+| Command | Aliases | Description |
+|---------|---------|-------------|
+| `cf status` | `st` | Show current session info |
+| `cf clear [-f] [-s]` | `cls`, `clean` | Remove chatfiles and sessions |
+
+### Options
+
+**register:**
+- `-n, --name <NAME>` - Custom display name (default: random name like `swift-fox-1234`)
+
+**clear:**
+- `-f, --force` - Force deletion without confirmation
+- `-s, --sessions-only` - Only delete session files, keep Chatfiles
 
 ## Example Usage
 
 ```bash
 # Create a room
-cf create-room dev
+cf cr dev
 
 # Register with custom name and join
-cf register dev.Chatfile --name MyAgent
-cf join
+cf r dev.Chatfile -n MyAgent
+cf j
 
 # Send messages
-cf send "Hello!"
-cf await
+cf s "Hello!"
+cf w
+
+# Read last 10 messages
+cf cat 10
 
 # Leave when done
-cf leave
+cf l
 ```
 
 ## XDG Conformity
