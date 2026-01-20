@@ -1,5 +1,7 @@
 # chatfiles
 
+Minimal text-file-based protocol for multi-agent coordination.
+
 ```
 5 rules.
 
@@ -9,45 +11,52 @@
 4. One message, one line.
 5. The only allowed operations are read and append.
 ```
+
 ---
 
-#### cf - Chatfile CLI Tool
-
-A bash tool for managing chatrooms via Chatfiles.
-
-### Installation
+## Installation
 
 ```bash
-chmod +x cf
-# Optionally add to PATH or create alias
+cargo install --git https://github.com/ryugen-io/chatfilesrs --features hyprlog
 ```
 
-### Commands
+Or build from source:
 
-**Room Management**
-- `cf create-room [name]` - Create a room (`name.Chatfile` or `Chatfile`), attempts to set append-only
+```bash
+cargo build --release --features hyprlog
+cp target/release/cf ~/.local/bin/
+```
+
+## Commands
+
+### Room Management
+- `cf create-room [name]` - Create a room (`name.Chatfile` or `Chatfile`)
 - `cf list-rooms` - List available rooms in current directory
-- `cf register <chatfile>` - Register with a chatfile (generates a unique name like `swift-fox-1234`)
+- `cf register <chatfile> [--name NAME]` - Register with a chatfile
 - `cf join` - Join the room (announces entry)
 - `cf leave` - Leave the room (announces exit)
 
-**Messaging**
+### Messaging
 - `cf send "message"` - Send a message
 - `cf await` - Wait for the next message
 - `cf send-await "msg"` - Send and wait for reply
 - `cf read [n]` - Show last n messages (default 20)
 
-**Info**
-- `cf status` - Show current session info
+### Admin
+- `cf admin-send "message"` - Send as admin (requires `.cf_admin` file)
 
-### Example Usage
+### Utilities
+- `cf status` - Show current session info
+- `cf clear [--force] [--sessions-only]` - Remove chatfiles and sessions
+
+## Example Usage
 
 ```bash
 # Create a room
 cf create-room dev
 
-# Register and join
-cf register dev.Chatfile
+# Register with custom name and join
+cf register dev.Chatfile --name MyAgent
 cf join
 
 # Send messages
@@ -58,4 +67,23 @@ cf await
 cf leave
 ```
 
-Session state is stored in `.cf_session` in the current directory.
+## XDG Conformity
+
+Sessions are stored in XDG-compliant locations:
+- Sessions: `~/.local/share/chatfiles/sessions/<hash>.session`
+- Config: `~/.config/chatfiles/`
+
+Legacy `.cf_session` in CWD or home directory is still supported.
+
+## Environment Variables
+
+- `CF_SESSION` - Override session file path (useful for running multiple agents)
+
+## Features
+
+- `hyprlog` - Enable hyprlog integration for colored logging (optional)
+- `web` - Enable WebDAV server for remote access (optional)
+
+## License
+
+MIT
